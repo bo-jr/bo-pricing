@@ -16,9 +16,12 @@ dependencies: []
 env:
   FAILURE_RATE: "0"
   EXTRA_LATENCY_MS: "0"
-  # One unit of qty = CPU_BURN_FACTOR x 1000 SHA-256 rounds. Measured on the
-  # M1: 1000 rounds ~= 51us (BenchmarkBurn), so 200 ~= 10ms per unit on one
-  # core. Recalibrate from the benchmark, never by feel.
+  # One unit of qty = CPU_BURN_FACTOR x 1000 SHA-256 rounds. BenchmarkBurn on
+  # the M1 host: 1000 rounds ~= 51us, i.e. ~10ms per unit at 200. Measured IN
+  # the dev cluster (Docker Desktop VM, 2026-09-29) the same request is slower:
+  # qty=1 p50 41ms / p90 75ms at concurrency 1 with ZERO CFS-throttled periods,
+  # so that is raw hashing cost in the VM, not throttling. At concurrency 8:
+  # p50 335ms / p90 613ms. Recalibrate from in-cluster measurements, never by feel.
   CPU_BURN_FACTOR: "200"
 secretEnv: []
 otlpEndpoint: ""

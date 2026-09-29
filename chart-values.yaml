@@ -1,0 +1,33 @@
+# Values for the shared chart, oci://ghcr.io/bo-jr/charts/service.
+#
+# chartVersion pins the chart by exact version: rendering these values with any
+# other chart version fails. image.digest is supplied at render time — by CI
+# from Phase 3, by `task sandbox:deploy` in bo-platform before that — and is
+# never committed here.
+chartVersion: 0.1.0
+name: pricing
+version: v1
+image:
+  repository: ghcr.io/bo-jr/bo-pricing
+  digest: ""
+workload: Deployment
+replicas: 1
+dependencies: []
+env:
+  FAILURE_RATE: "0"
+  EXTRA_LATENCY_MS: "0"
+  # One unit of qty = CPU_BURN_FACTOR x 1000 SHA-256 rounds. BenchmarkBurn on
+  # the M1 host: 1000 rounds ~= 51us, i.e. ~10ms per unit at 200. Measured IN
+  # the dev cluster (Docker Desktop VM, 2026-09-29) the same request is slower:
+  # qty=1 p50 41ms / p90 75ms at concurrency 1 with ZERO CFS-throttled periods,
+  # so that is raw hashing cost in the VM, not throttling. At concurrency 8:
+  # p50 335ms / p90 613ms. Recalibrate from in-cluster measurements, never by feel.
+  CPU_BURN_FACTOR: "200"
+secretEnv: []
+otlpEndpoint: ""
+# requests == limits: a Guaranteed, known CPU budget. Under load, latency grows
+# from contention inside this 0.5-core ceiling, which is the behaviour the
+# latency SLO and Phase 6 scenario 4 depend on. Change it knowingly.
+resources:
+  requests: { cpu: 500m, memory: 64Mi }
+  limits:   { cpu: 500m, memory: 128Mi }
